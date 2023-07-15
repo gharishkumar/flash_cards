@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flash Card</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.js"></script>
+    <style>
+        body{
+            height: 100vh;
+            /* overflow: hidden; */
+            display: grid;
+            justify-content: center;
+            align-content: center;
+        }
+        .card {
+            background: rgba(97, 255, 255, 0.13);
+            position: relative;
+            display: flex;
+            height: 90vh;
+            width: 90vw;
+            border-radius: 2em;
+            box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+        }
+        .right {
+            display: grid;
+            justify-content: center;
+            align-content: center;
+            /* background-color: rgba(226, 43, 43, 0.5); */
+            color: gray;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .center {
+            display: grid;
+            justify-content: center;
+            align-content: center;
+            /* background-color: rgba(95, 255, 63, 0.4); */
+        }
+        span {
+            display: inline-block;
+            vertical-align: middle;
+            text-align: center;
+            line-height: normal;
+        }
+        .left {
+            display: grid;
+            justify-content: center;
+            align-content: center;
+            /* background-color: rgba(226, 43, 43, 0.5); */
+            color: gray;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+                /* Box styles */
+        .textBox {
+            border: none;
+            font: 24px/36px sans-serif;
+            /* width: 40vw;
+            height: 40vh;
+            line-height: 40vh; */
+            max-width: 70vw;
+            max-height: 70vh;
+            overflow: scroll;
+        }
+        
+        #csv::file-selector-button {
+        background-color: #57b9ff;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        box-shadow: rgba(255, 255, 255, .4) 0 1px 0 0 inset;
+        box-sizing: border-box;
+        color: #fff;
+        cursor: pointer;
+        display: inline-block;
+        font-family: -apple-system,system-ui,"Segoe UI","Liberation Sans",sans-serif;
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.15385;
+        margin: 5px;
+        outline: none;
+        padding: 8px .8em;
+        position: relative;
+        text-align: center;
+        text-decoration: none;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        vertical-align: baseline;
+        white-space: nowrap;
+        }
+
+        #csv::file-selector-button:hover,
+        #csv::file-selector-button:focus {
+        background-color: #07c;
+        }
+
+        #csv::file-selector-button:focus {
+        box-shadow: 0 0 0 4px rgba(0, 149, 255, .15);
+        }
+
+        #csv::file-selector-button:active {
+        background-color: #0064bd;
+        box-shadow: none;
+        }
+
+        /* Scrollbar styles */
+        ::-webkit-scrollbar {
+            overflow:auto;
+            width: 7px;
+            height: 7px;
+        }
+
+        /* ::-webkit-scrollbar-track {
+            border: 1px solid rgb(196, 196, 196);
+            border-radius: 10px;
+        } */
+
+        ::-webkit-scrollbar-thumb {
+            background: grey;  
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgb(196, 196, 196); 
+        }
+    </style>
+</head>
+<body>
+    <input type="file" accept=".csv" id="csv" class="form-control">
+
+    <div class="card">
+        <div class="left" style="flex-grow: 1" onclick="prev()"><p id="prev">&#x25C0;</p></div>
+        <div class="center" style="flex-grow: 8" onclick="rotate()">
+            <div class="textBox">
+                <span id="content"></span>
+            </div>
+        </div>
+        <div class="right" style="flex-grow: 1" onclick="next()"><p id="next">&#x25B6;</p></div>
+    </div>
+    <script>
+    var raw_data_array = [];
+    var i=1, j=0;
+    function arrayToTable(tableData) {
+        var table = $('<table></table>');
+        $(tableData).each(function (i, rowData) {
+            var row = $('<tr></tr>');
+            $(rowData).each(function (j, cellData) {
+                row.append($('<td>'+cellData+'</td>'));
+            });
+            table.append(row);
+        });
+        return table;
+    }
+
+    $.ajax({
+        type: "GET",
+        url: "data.csv",
+        success: function (data) {
+            raw_data_array = Papa.parse(data).data;
+            console.log(raw_data_array);
+            // $('body').append(arrayToTable(raw_data_array));
+            init();
+        }
+    });
+
+    function readSingleFile(evt){
+        var f = evt.target.files[0]
+        if (f) {
+            var r = new FileReader();
+            r.onload = function(e) { 
+                var contents = e.target.result;
+                raw_data_array = Papa.parse(contents).data;
+                console.log(raw_data_array);
+                init();
+            }
+            r.readAsText(f);
+        } else { 
+            alert("Failed to load file");
+        }
+    }
+    document.getElementById('csv').addEventListener('change', readSingleFile);
+    
+    
+    function init(){
+        let first = raw_data_array[i][j];
+        console.log(first);
+        $("#content").text(raw_data_array[i][j]);
+        $("#prev").hide();
+    }
+    function next(){
+        $("#prev").show();
+        $("#next").show();
+        if(i<(raw_data_array.length-2)) {
+            i=i+1;
+        }
+        if(i==(raw_data_array.length-2)) {
+            $("#next").hide();
+        }
+        // console.log(raw_data_array[i][j]);
+        // console.log('n');
+        $("#content").text(raw_data_array[i][j]);
+    }
+    function prev(){
+        $("#prev").show();
+        $("#next").show();
+        if(i>1) {
+            i=i-1;
+        }
+        if(i==1) {
+            $("#prev").hide();
+        }
+
+        // console.log(raw_data_array[i][j]);
+        // console.log('p');
+        $("#content").text(raw_data_array[i][j]);
+    }
+    function rotate(){
+        if(j==1){
+            j=0;
+            $(".card").css('background', 'rgba(97, 255, 255, 0.13)');
+        } else {
+            j=1;
+            $(".card").css('background', 'rgba(97, 155, 155, 0.13)');
+        }
+        $("#content").text(raw_data_array[i][j]);
+    }
+    let touchstartX = 0
+    let touchendX = 0
+        
+    function checkDirection() {
+    if (touchendX+70 < touchstartX) next()
+    if (touchendX-70 > touchstartX) prev()
+    }
+
+    document.addEventListener('touchstart', e => {
+    touchstartX = e.changedTouches[0].screenX
+    })
+
+    document.addEventListener('touchend', e => {
+    touchendX = e.changedTouches[0].screenX
+    checkDirection()
+    })
+
+
+</script>
+</body>
+</html>
